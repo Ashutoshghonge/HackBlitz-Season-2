@@ -1,0 +1,1718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedGuard - Smart Medicine Reminder</title>
+    <style>
+        :root {
+            --primary: #6a11cb;
+            --primary-light: #8e5cf7;
+            --gradient: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            --secondary: #2575fc;
+            --white: #ffffff;
+            --light-gray: #f5f7fa;
+            --dark-gray: #343a40;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--light-gray);
+            color: var(--dark-gray);
+        }
+        
+        header {
+            background: var(--gradient);
+            color: var(--white);
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .tagline {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        main {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        @media (min-width: 768px) {
+            .dashboard {
+                grid-template-columns: 2fr 1fr;
+            }
+        }
+        
+        .card {
+            background: var(--white);
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--light-gray);
+        }
+        
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        button {
+            background: var(--gradient);
+            color: var(--white);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-small {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+        }
+        
+        .btn-success {
+            background: var(--success);
+        }
+        
+        .btn-warning {
+            background: var(--warning);
+            color: var(--dark-gray);
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            background-color: var(--light-gray);
+            font-weight: 600;
+        }
+        
+        .medication-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .medication-info {
+            flex: 1;
+        }
+        
+        .medication-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .medication-schedule {
+            font-size: 0.85rem;
+            color: #666;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .status-active {
+            background-color: rgba(40, 167, 69, 0.2);
+            color: var(--success);
+        }
+        
+        .status-missed {
+            background-color: rgba(220, 53, 69, 0.2);
+            color: var(--danger);
+        }
+        
+        .status-upcoming {
+            background-color: rgba(255, 193, 7, 0.2);
+            color: #856404;
+        }
+        
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 1rem;
+            border-radius: 5px;
+            background: var(--success);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+        }
+        
+        .progress-container {
+            height: 10px;
+            background: #eee;
+            border-radius: 5px;
+            margin-top: 0.5rem;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: var(--gradient);
+            border-radius: 5px;
+            width: 0;
+            transition: width 0.3s ease;
+        }
+        
+        .chart-container {
+            height: 250px;
+            position: relative;
+        }
+        
+        .adherence-rate {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-align: center;
+            margin: 1rem 0;
+        }
+        
+        .adherence-label {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .pill-icon {
+            display: inline-block;
+            margin-right: 0.5rem;
+            font-size: 1.2rem;
+        }
+        
+        .tab-container {
+            margin-bottom: 1rem;
+        }
+        
+        .tab-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .tab-button {
+            padding: 0.5rem 1rem;
+            background: var(--light-gray);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: var(--dark-gray);
+        }
+        
+        .tab-button.active {
+            background: var(--gradient);
+            color: var(--white);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .caregiver-card {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .caregiver-info {
+            flex: 1;
+        }
+        
+        .caregiver-name {
+            font-weight: 600;
+        }
+        
+        .caregiver-relation {
+            font-size: 0.85rem;
+            color: #666;
+        }
+        
+        .bubble {
+            width: 40px;
+            height: 40px;
+            background: var(--gradient);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-weight: 600;
+        }
+
+        /* Mobile optimization */
+        @media (max-width: 576px) {
+            .card {
+                padding: 1rem;
+            }
+            
+            .medication-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .action-buttons {
+                margin-top: 0.5rem;
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+
+        /* Animation for notification */
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .notification.show {
+            display: block;
+            animation: slideIn 0.3s forwards;
+        }
+
+/* Calendar view styles */
+.calendar-container {
+    margin-top: 1rem;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+}
+
+.calendar-day {
+    aspect-ratio: 1/1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--light-gray);
+    border-radius: 5px;
+    font-size: 0.9rem;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.calendar-day:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.calendar-day.active {
+    background: var(--gradient);
+    color: var(--white);
+}
+
+.calendar-day .day-number {
+    font-weight: bold;
+}
+
+.calendar-day .medication-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--primary);
+    margin-top: 3px;
+}
+
+.day-header {
+    font-size: 0.7rem;
+    text-align: center;
+    color: #666;
+    padding: 5px 0;
+}
+
+/* Rotating pill animation */
+@keyframes rotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-pill {
+    display: inline-block;
+    animation: rotate 2s infinite linear;
+    margin-right: 5px;
+}
+
+/* Reminder alert styles */
+.reminder-alert {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--white);
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    text-align: center;
+    max-width: 90%;
+    width: 350px;
+    z-index: 101;
+    display: none;
+}
+
+.reminder-alert h3 {
+    color: var(--primary);
+    margin-bottom: 1rem;
+}
+
+.reminder-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+/* Statistics chart */
+.chart-wrapper {
+    margin-top: 1rem;
+    height: 200px;
+    position: relative;
+}
+
+.chart-bar {
+    position: absolute;
+    bottom: 0;
+    width: 12%;
+    border-radius: 5px 5px 0 0;
+    background: var(--gradient);
+    transition: height 0.5s ease;
+}
+
+.chart-label {
+    position: absolute;
+    bottom: -25px;
+    text-align: center;
+    font-size: 0.8rem;
+    width: 100%;
+}
+
+/* Medicine image styles */
+.med-image {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background: var(--light-gray);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+    font-size: 1.4rem;
+}
+
+.med-row {
+    display: flex;
+    align-items: center;
+}
+
+/* Profile section */
+.profile-section {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background: var(--light-gray);
+    border-radius: 10px;
+    margin-bottom: 1rem;
+}
+
+.profile-image {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--gradient);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-right: 1rem;
+}
+
+.profile-info h3 {
+    margin: 0;
+    color: var(--primary);
+}
+
+/* Dark mode toggle */
+.dark-mode-toggle {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: transparent;
+    border: none;
+    color: var(--white);
+    font-size: 1.2rem;
+    cursor: pointer;
+    z-index: 10;
+}
+
+/* Dark mode styles */
+body.dark-mode {
+    background-color: #1a1a2e;
+    color: #e6e6e6;
+}
+
+body.dark-mode .card {
+    background: #16213e;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+body.dark-mode .card-title {
+    color: var(--secondary);
+}
+
+body.dark-mode .light-gray {
+    background: #0f3460;
+}
+
+body.dark-mode th {
+    background-color: #0f3460;
+}
+
+body.dark-mode input, body.dark-mode select {
+    background: #16213e;
+    border: 1px solid #444;
+    color: #e6e6e6;
+}
+
+/* Confetti animation for completion */
+.confetti {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: var(--primary);
+    opacity: 0;
+}
+
+@keyframes confetti-fall {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+    </style>
+</head>
+<body>
+    <header>
+        <h1>MedGuard</h1>
+        <p class="tagline">Smart Medicine Reminder System</p>
+    </header>
+    
+    <main>
+        <div class="dashboard">
+            <div class="left-panel">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Today's Medications</div>
+                        <button id="add-medication-btn">Add Medication</button>
+                    </div>
+                    
+                    <div id="medications-list">
+                        <!-- Medications will be added here dynamically -->
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Recent Activity</div>
+                    </div>
+                    <div id="activity-list">
+                        <!-- Activity history will be added here dynamically -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="right-panel">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Medication Adherence</div>
+                    </div>
+                    <div class="adherence-rate" id="adherence-rate">0%</div>
+                    <div class="adherence-label">This Week</div>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="adherence-progress"></div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Caregivers</div>
+                        <button id="add-caregiver-btn" class="btn-small">Add</button>
+                    </div>
+                    <div id="caregivers-list">
+                        <!-- Caregivers will be added here dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Add Medication Modal -->
+    <div id="add-medication-modal" class="card" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 500px; z-index: 100;">
+        <div class="card-header">
+            <div class="card-title">Add New Medication</div>
+            <button id="close-medication-modal" class="btn-small btn-danger">✕</button>
+        </div>
+        <form id="add-medication-form">
+            <div class="form-group">
+                <label for="med-name">Medication Name</label>
+                <input type="text" id="med-name" required placeholder="e.g., Aspirin">
+            </div>
+            <div class="form-group">
+                <label for="med-dosage">Dosage</label>
+                <input type="text" id="med-dosage" required placeholder="e.g., 500mg">
+            </div>
+            <div class="form-group">
+                <label for="med-frequency">Frequency</label>
+                <select id="med-frequency" required>
+                    <option value="once">Once a day</option>
+                    <option value="twice">Twice a day</option>
+                    <option value="three">Three times a day</option>
+                    <option value="four">Four times a day</option>
+                    <option value="custom">Custom</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="med-time">Time</label>
+                <input type="time" id="med-time" required>
+            </div>
+            <div class="form-group">
+                <label for="med-notes">Notes (Optional)</label>
+                <input type="text" id="med-notes" placeholder="e.g., Take with food">
+            </div>
+            <button type="submit" class="btn-success" style="width: 100%;">Add Medication</button>
+        </form>
+    </div>
+    
+    <!-- Add Caregiver Modal -->
+    <div id="add-caregiver-modal" class="card" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 500px; z-index: 100;">
+        <div class="card-header">
+            <div class="card-title">Add Caregiver</div>
+            <button id="close-caregiver-modal" class="btn-small btn-danger">✕</button>
+        </div>
+        <form id="add-caregiver-form">
+            <div class="form-group">
+                <label for="caregiver-name">Name</label>
+                <input type="text" id="caregiver-name" required placeholder="Full Name">
+            </div>
+            <div class="form-group">
+                <label for="caregiver-relation">Relationship</label>
+                <select id="caregiver-relation" required>
+                    <option value="family">Family Member</option>
+                    <option value="friend">Friend</option>
+                    <option value="nurse">Nurse</option>
+                    <option value="doctor">Doctor</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="caregiver-email">Email</label>
+                <input type="email" id="caregiver-email" required placeholder="Email Address">
+            </div>
+            <div class="form-group">
+                <label for="caregiver-phone">Phone (Optional)</label>
+                <input type="tel" id="caregiver-phone" placeholder="Phone Number">
+            </div>
+            <button type="submit" class="btn-success" style="width: 100%;">Add Caregiver</button>
+        </form>
+    </div>
+    
+    <!-- Overlay -->
+    <div id="overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 99;"></div>
+    
+    <!-- Notification -->
+    <div class="notification" id="notification"></div>
+    
+    <script>
+        // Sample data - in a real app this would be stored in a database
+        let medications = [
+            {
+                id: 1,
+                name: "Lisinopril",
+                dosage: "10mg",
+                frequency: "once",
+                time: "08:00",
+                notes: "Take with water",
+                status: "active",
+                completed: false
+            },
+            {
+                id: 2,
+                name: "Metformin",
+                dosage: "500mg",
+                frequency: "twice",
+                time: "12:00",
+                notes: "Take with food",
+                status: "upcoming",
+                completed: false
+            },
+            {
+                id: 3,
+                name: "Vitamin D",
+                dosage: "1000 IU",
+                frequency: "once",
+                time: "21:00",
+                notes: "",
+                status: "upcoming",
+                completed: false
+            }
+        ];
+        
+        let caregivers = [
+            {
+                id: 1,
+                name: "Sarah Johnson",
+                relation: "family",
+                email: "sarah.j@example.com",
+                phone: "555-123-4567"
+            }
+        ];
+        
+        let activities = [
+            {
+                id: 1,
+                medicationId: 1,
+                action: "taken",
+                timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString() // 2 hours ago
+            }
+        ];
+        
+        // DOM Elements
+        const medicationsList = document.getElementById('medications-list');
+        const activityList = document.getElementById('activity-list');
+        const caregiversList = document.getElementById('caregivers-list');
+        const addMedicationBtn = document.getElementById('add-medication-btn');
+        const addCaregiverBtn = document.getElementById('add-caregiver-btn');
+        const addMedicationModal = document.getElementById('add-medication-modal');
+        const addCaregiverModal = document.getElementById('add-caregiver-modal');
+        const closeMedicationModal = document.getElementById('close-medication-modal');
+        const closeCaregiverModal = document.getElementById('close-caregiver-modal');
+        const overlay = document.getElementById('overlay');
+        const addMedicationForm = document.getElementById('add-medication-form');
+        const addCaregiverForm = document.getElementById('add-caregiver-form');
+        const adherenceRate = document.getElementById('adherence-rate');
+        const adherenceProgress = document.getElementById('adherence-progress');
+        const notification = document.getElementById('notification');
+        
+        // Initialize the app
+        function init() {
+            renderMedications();
+            renderActivities();
+            renderCaregivers();
+            updateAdherence();
+            startReminderCheck();
+            
+            // Event listeners
+            addMedicationBtn.addEventListener('click', showAddMedicationModal);
+            closeMedicationModal.addEventListener('click', hideAddMedicationModal);
+            addCaregiverBtn.addEventListener('click', showAddCaregiverModal);
+            closeCaregiverModal.addEventListener('click', hideAddCaregiverModal);
+            overlay.addEventListener('click', hideModals);
+            
+            addMedicationForm.addEventListener('submit', handleAddMedication);
+            addCaregiverForm.addEventListener('submit', handleAddCaregiver);
+            
+            // Load data from localStorage if available
+            loadData();
+        }
+        
+        // Load data from localStorage
+        function loadData() {
+            const savedMedications = localStorage.getItem('medications');
+            const savedCaregivers = localStorage.getItem('caregivers');
+            const savedActivities = localStorage.getItem('activities');
+            
+            if (savedMedications) {
+                medications = JSON.parse(savedMedications);
+                renderMedications();
+            }
+            
+            if (savedCaregivers) {
+                caregivers = JSON.parse(savedCaregivers);
+                renderCaregivers();
+            }
+            
+            if (savedActivities) {
+                activities = JSON.parse(savedActivities);
+                renderActivities();
+            }
+        }
+        
+        // Save data to localStorage
+        function saveData() {
+            localStorage.setItem('medications', JSON.stringify(medications));
+            localStorage.setItem('caregivers', JSON.stringify(caregivers));
+            localStorage.setItem('activities', JSON.stringify(activities));
+        }
+        
+        // Render medications list
+        function renderMedications() {
+            medicationsList.innerHTML = '';
+            
+            if (medications.length === 0) {
+                medicationsList.innerHTML = '<p style="text-align: center; padding: 1rem;">No medications added yet.</p>';
+                return;
+            }
+            
+            medications.forEach(med => {
+                const item = document.createElement('div');
+                item.className = 'medication-item';
+                
+                const statusClass = med.status === 'active' ? 'status-active' : 
+                                   med.status === 'missed' ? 'status-missed' : 'status-upcoming';
+                
+                item.innerHTML = `
+                    <div class="medication-info">
+                        <div class="medication-name">
+                            <span class="pill-icon">💊</span>
+                            ${med.name} (${med.dosage})
+                            <span class="status ${statusClass}">${med.status}</span>
+                        </div>
+                        <div class="medication-schedule">
+                            ${formatTime(med.time)} - ${formatFrequency(med.frequency)}
+                            ${med.notes ? `<br><small>${med.notes}</small>` : ''}
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        ${med.status === 'active' || med.status === 'upcoming' ? 
+                          `<button class="btn-small btn-success" onclick="markTaken(${med.id})">Take</button>` : ''}
+                        ${med.status === 'missed' ? 
+                          `<button class="btn-small btn-warning" onclick="markTaken(${med.id})">Late Take</button>` : ''}
+                        <button class="btn-small btn-danger" onclick="deleteMedication(${med.id})">✕</button>
+                    </div>
+                `;
+                
+                medicationsList.appendChild(item);
+            });
+        }
+        
+        // Render activities list
+        function renderActivities() {
+            activityList.innerHTML = '';
+            
+            if (activities.length === 0) {
+                activityList.innerHTML = '<p style="text-align: center; padding: 1rem;">No activity recorded yet.</p>';
+                return;
+            }
+            
+            // Sort activities by timestamp, newest first
+            const sortedActivities = [...activities].sort((a, b) => 
+                new Date(b.timestamp) - new Date(a.timestamp)
+            ).slice(0, 10); // Show only the 10 most recent activities
+            
+            sortedActivities.forEach(activity => {
+                const med = medications.find(m => m.id === activity.medicationId) || { name: 'Unknown medication' };
+                const item = document.createElement('div');
+                item.className = 'medication-item';
+                
+                const actionIcon = activity.action === 'taken' ? '✅' : 
+                                   activity.action === 'missed' ? '❌' : '⏰';
+                
+                item.innerHTML = `
+                    <div class="medication-info">
+                        <div class="medication-name">
+                            ${actionIcon} ${med.name}
+                        </div>
+                        <div class="medication-schedule">
+                            ${activity.action.charAt(0).toUpperCase() + activity.action.slice(1)} ${formatTimeAgo(activity.timestamp)}
+                        </div>
+                    </div>
+                `;
+                
+                activityList.appendChild(item);
+            });
+        }
+        
+        // Render caregivers list
+        function renderCaregivers() {
+            caregiversList.innerHTML = '';
+            
+            if (caregivers.length === 0) {
+                caregiversList.innerHTML = '<p style="text-align: center; padding: 1rem;">No caregivers added yet.</p>';
+                return;
+            }
+            
+            caregivers.forEach(caregiver => {
+                const item = document.createElement('div');
+                item.className = 'caregiver-card';
+                
+                const initials = caregiver.name.split(' ')
+                    .map(n => n[0])
+                    .slice(0, 2)
+                    .join('')
+                    .toUpperCase();
+                
+                item.innerHTML = `
+                    <div class="bubble">${initials}</div>
+                    <div class="caregiver-info">
+                        <div class="caregiver-name">${caregiver.name}</div>
+                        <div class="caregiver-relation">${formatRelation(caregiver.relation)}</div>
+                    </div>
+                    <button class="btn-small btn-danger" onclick="deleteCaregiver(${caregiver.id})">✕</button>
+                `;
+                
+                caregiversList.appendChild(item);
+            });
+        }
+        
+        // Update adherence rate display
+        function updateAdherence() {
+            // Calculate adherence rate (taken medications / total medications that should have been taken)
+            const totalActivities = activities.filter(a => a.action === 'taken' || a.action === 'missed').length;
+            const takenActivities = activities.filter(a => a.action === 'taken').length;
+            
+            const rate = totalActivities === 0 ? 0 : Math.round((takenActivities / totalActivities) * 100);
+            
+            adherenceRate.textContent = `${rate}%`;
+            adherenceProgress.style.width = `${rate}%`;
+        }
+        
+        // Mark medication as taken
+        function markTaken(id) {
+            const medication = medications.find(med => med.id === id);
+            if (medication) {
+                medication.status = 'taken';
+                medication.completed = true;
+                
+                // Add to activity log
+                activities.push({
+                    id: activities.length + 1,
+                    medicationId: id,
+                    action: 'taken',
+                    timestamp: new Date().toISOString()
+                });
+                
+                renderMedications();
+                renderActivities();
+                updateAdherence();
+                saveData();
+                
+                showNotification(`You've taken ${medication.name}!`);
+            }
+        }
+        
+        // Delete medication
+        function deleteMedication(id) {
+            if (confirm('Are you sure you want to delete this medication?')) {
+                medications = medications.filter(med => med.id !== id);
+                renderMedications();
+                saveData();
+            }
+        }
+        
+        // Delete caregiver
+        function deleteCaregiver(id) {
+            if (confirm('Are you sure you want to remove this caregiver?')) {
+                caregivers = caregivers.filter(caregiver => caregiver.id !== id);
+                renderCaregivers();
+                saveData();
+            }
+        }
+        
+        // Show add medication modal
+        function showAddMedicationModal() {
+            addMedicationModal.style.display = 'block';
+            overlay.style.display = 'block';
+        }
+        
+        // Hide add medication modal
+        function hideAddMedicationModal() {
+            addMedicationModal.style.display = 'none';
+            overlay.style.display = 'none';
+            addMedicationForm.reset();
+        }
+        
+        // Show add caregiver modal
+        function showAddCaregiverModal() {
+            addCaregiverModal.style.display = 'block';
+            overlay.style.display = 'block';
+        }
+        
+        // Hide add caregiver modal
+        function hideAddCaregiverModal() {
+            addCaregiverModal.style.display = 'none';
+            overlay.style.display = 'none';
+            addCaregiverForm.reset();
+        }
+        
+        // Hide all modals
+        function hideModals() {
+            addMedicationModal.style.display = 'none';
+            addCaregiverModal.style.display = 'none';
+            overlay.style.display = 'none';
+        }
+        
+        // Handle adding new medication
+        function handleAddMedication(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('med-name').value;
+            const dosage = document.getElementById('med-dosage').value;
+            const frequency = document.getElementById('med-frequency').value;
+            const time = document.getElementById('med-time').value;
+            const notes = document.getElementById('med-notes').value;
+            
+            const newMedication = {
+                id: medications.length + 1,
+                name,
+                dosage,
+                frequency,
+                time,
+                notes,
+                status: getStatusFromTime(time),
+                completed: false
+            };
+            
+            medications.push(newMedication);
+            renderMedications();
+            hideAddMedicationModal();
+            saveData();
+            showNotification('Medication added successfully!');
+        }
+        
+        // Handle adding new caregiver
+        function handleAddCaregiver(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('caregiver-name').value;
+            const relation = document.getElementById('caregiver-relation').value;
+            const email = document.getElementById('caregiver-email').value;
+            const phone = document.getElementById('caregiver-phone').value;
+            
+            const newCaregiver = {
+                id: caregivers.length + 1,
+                name,
+                relation,
+                email,
+                phone
+            };
+            
+            caregivers.push(newCaregiver);
+            renderCaregivers();
+            hideAddCaregiverModal();
+            saveData();
+            showNotification('Caregiver added successfully!');
+            
+            // In a real app, we would send an invitation to the caregiver here
+        }
+        
+        // Determine medication status based on scheduled time
+        function getStatusFromTime(timeStr) {
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            const now = new Date();
+            const medicationTime = new Date();
+            medicationTime.setHours(hours, minutes, 0);
+            
+            // If medication time is more than 30 minutes ago and less than 12 hours ago, mark as active
+            if (now > medicationTime && now - medicationTime < 1000 * 60 * 30) {
+                return 'active';
+            }
+            // If medication time is more than 30 minutes ago and less than 12 hours ago, mark as missed
+            else if (now > medicationTime && now - medicationTime < 1000 * 60 * 60 * 12) {
+                return 'missed';
+            }
+            // Otherwise it's upcoming
+            else {
+                return 'upcoming';
+            }
+        }
+        
+       // Format time string (24h to 12h) - completing the cut-off function
+function formatTime(timeStr) {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const hour12 = hours % 12 || 12;
+    return `${hour12}:${minutes.toString().padStart(2, '0')} ${period}`;
+}
+
+// Format frequency string
+function formatFrequency(frequency) {
+    switch (frequency) {
+        case 'once': return 'Once a day';
+        case 'twice': return 'Twice a day';
+        case 'three': return 'Three times a day';
+        case 'four': return 'Four times a day';
+        case 'custom': return 'Custom schedule';
+        default: return frequency;
+    }
+}
+
+// Format relation string
+function formatRelation(relation) {
+    switch (relation) {
+        case 'family': return 'Family Member';
+        case 'friend': return 'Friend';
+        case 'nurse': return 'Nurse';
+        case 'doctor': return 'Doctor';
+        case 'other': return 'Other';
+        default: return relation;
+    }
+}
+
+// Format time ago string
+function formatTimeAgo(timestamp) {
+    const now = new Date();
+    const time = new Date(timestamp);
+    const diff = now - time;
+    
+    // Convert diff to minutes, hours, days
+    const minutes = Math.floor(diff / (1000 * 60));
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    
+    if (minutes < 1) {
+        return 'just now';
+    } else if (minutes < 60) {
+        return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
+    } else if (hours < 24) {
+        return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+    } else {
+        return `${days} day${days !== 1 ? 's' : ''} ago`;
+    }
+}
+
+// Show notification
+function showNotification(message) {
+    notification.textContent = message;
+    notification.classList.add('show');
+    
+    setTimeout(() => {
+        notification.classList.remove('show');
+    }, 3000);
+}
+
+// Check and update medication status
+function updateMedicationStatus() {
+    let updated = false;
+    
+    medications.forEach(med => {
+        const oldStatus = med.status;
+        const newStatus = getStatusFromTime(med.time);
+        
+        // Only update if the status has changed and medication hasn't been completed
+        if (oldStatus !== newStatus && !med.completed) {
+            med.status = newStatus;
+            updated = true;
+            
+            // If status changed to missed, add to activity log
+            if (newStatus === 'missed' && oldStatus === 'active') {
+                activities.push({
+                    id: activities.length + 1,
+                    medicationId: med.id,
+                    action: 'missed',
+                    timestamp: new Date().toISOString()
+                });
+            }
+            
+            // If status changed to active, show reminder
+            if (newStatus === 'active' && oldStatus === 'upcoming') {
+                showNotification(`Time to take ${med.name}!`);
+            }
+        }
+    });
+    
+    if (updated) {
+        renderMedications();
+        renderActivities();
+        updateAdherence();
+        saveData();
+    }
+}
+
+// Check for medication reminders every minute
+function startReminderCheck() {
+    // Initial check
+    updateMedicationStatus();
+    
+    // Set interval for checking (every minute)
+    setInterval(updateMedicationStatus, 60 * 1000);
+}
+
+// Reset medication statuses at midnight
+function resetMedicationStatuses() {
+    const now = new Date();
+    const midnight = new Date();
+    midnight.setHours(24, 0, 0, 0);
+    
+    const timeUntilMidnight = midnight - now;
+    
+    setTimeout(() => {
+        medications.forEach(med => {
+            med.completed = false;
+            med.status = getStatusFromTime(med.time);
+        });
+        
+        renderMedications();
+        saveData();
+        
+        // Set up the next day's reset
+        resetMedicationStatuses();
+    }, timeUntilMidnight);
+}
+
+// Initialize the application
+document.addEventListener('DOMContentLoaded', () => {
+    init();
+    resetMedicationStatuses();
+});
+// Calendar functionality
+function renderCalendar() {
+    const calendarCard = document.createElement('div');
+    calendarCard.className = 'card';
+    calendarCard.innerHTML = `
+        <div class="card-header">
+            <div class="card-title">Medication Calendar</div>
+        </div>
+        <div class="calendar-container">
+            <div class="calendar-header">
+                <button class="btn-small" id="prev-month">←</button>
+                <div id="calendar-month">April 2025</div>
+                <button class="btn-small" id="next-month">→</button>
+            </div>
+            <div class="calendar-grid" id="calendar-days-header">
+                <div class="day-header">Sun</div>
+                <div class="day-header">Mon</div>
+                <div class="day-header">Tue</div>
+                <div class="day-header">Wed</div>
+                <div class="day-header">Thu</div>
+                <div class="day-header">Fri</div>
+                <div class="day-header">Sat</div>
+            </div>
+            <div class="calendar-grid" id="calendar-days">
+                <!-- Days will be added here -->
+            </div>
+        </div>
+    `;
+    
+    document.querySelector('.left-panel').appendChild(calendarCard);
+    
+    // Initial calendar render
+    updateCalendar(new Date());
+    
+    // Add event listeners for calendar navigation
+    document.getElementById('prev-month').addEventListener('click', () => {
+        const currentMonth = document.getElementById('calendar-month').textContent;
+        const [month, year] = currentMonth.split(' ');
+        const date = new Date(`${month} 1, ${year}`);
+        date.setMonth(date.getMonth() - 1);
+        updateCalendar(date);
+    });
+    
+    document.getElementById('next-month').addEventListener('click', () => {
+        const currentMonth = document.getElementById('calendar-month').textContent;
+        const [month, year] = currentMonth.split(' ');
+        const date = new Date(`${month} 1, ${year}`);
+        date.setMonth(date.getMonth() + 1);
+        updateCalendar(date);
+    });
+}
+
+function updateCalendar(date) {
+    const daysGrid = document.getElementById('calendar-days');
+    daysGrid.innerHTML = '';
+    
+    const month = date.getMonth();
+    const year = date.getFullYear();
+    
+    // Update month display
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", 
+                         "August", "September", "October", "November", "December"];
+    document.getElementById('calendar-month').textContent = `${monthNames[month]} ${year}`;
+    
+    // Get first day of month and number of days
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    
+    // Add empty cells for days before the first day of month
+    for (let i = 0; i < firstDay; i++) {
+        const emptyDay = document.createElement('div');
+        emptyDay.className = 'calendar-day';
+        emptyDay.style.visibility = 'hidden';
+        daysGrid.appendChild(emptyDay);
+    }
+    
+    // Add days of month
+    const today = new Date();
+    for (let i = 1; i <= daysInMonth; i++) {
+        const dayDiv = document.createElement('div');
+        dayDiv.className = 'calendar-day';
+        
+        // Mark current day
+        if (i === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+            dayDiv.classList.add('active');
+        }
+        
+        // Check if any medications are scheduled for this day
+        const hasMedication = medications.some(med => true); // In a real app, we'd check dates
+        
+        dayDiv.innerHTML = `
+            <span class="day-number">${i}</span>
+            ${hasMedication ? '<div class="medication-dot"></div>' : ''}
+        `;
+        
+        // Add click event to show medications for that day
+        dayDiv.addEventListener('click', () => {
+            document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('active'));
+            dayDiv.classList.add('active');
+            
+            // In a real app, we'd filter medications by date
+            showNotification(`Showing medications for ${monthNames[month]} ${i}, ${year}`);
+        });
+        
+        daysGrid.appendChild(dayDiv);
+    }
+}
+
+// Add statistics chart
+function addStatisticsChart() {
+    const chartCard = document.createElement('div');
+    chartCard.className = 'card';
+    chartCard.innerHTML = `
+        <div class="card-header">
+            <div class="card-title">Weekly Adherence</div>
+        </div>
+        <div class="chart-wrapper" id="adherence-chart">
+            <!-- Bars will be added dynamically -->
+        </div>
+    `;
+    
+    document.querySelector('.right-panel').appendChild(chartCard);
+    updateAdherenceChart();
+}
+
+// Replace the existing updateAdherenceChart function with this improved version
+function updateAdherenceChart() {
+    const chartContainer = document.getElementById('adherence-chart');
+    chartContainer.innerHTML = '';
+    
+    // Generate sample data
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const adherenceData = [85, 100, 75, 90, 100, 80, 95]; // Percentages
+    
+    // Create a flex container for proper spacing
+    const flexContainer = document.createElement('div');
+    flexContainer.style.display = 'flex';
+    flexContainer.style.justifyContent = 'space-between';
+    flexContainer.style.alignItems = 'flex-end';
+    flexContainer.style.height = '180px';
+    flexContainer.style.width = '100%';
+    flexContainer.style.padding = '0 10px';
+    flexContainer.style.marginTop = '20px';
+    
+    days.forEach((day, index) => {
+        const barWrapper = document.createElement('div');
+        barWrapper.style.display = 'flex';
+        barWrapper.style.flexDirection = 'column';
+        barWrapper.style.alignItems = 'center';
+        barWrapper.style.width = '12%';
+        
+        // Create the bar
+        const bar = document.createElement('div');
+        bar.style.width = '100%';
+        bar.style.background = 'var(--gradient)';
+        bar.style.borderRadius = '3px 3px 0 0';
+        bar.style.transition = 'height 0.5s ease';
+        bar.style.height = '0px';
+        
+        // Create the label
+        const label = document.createElement('div');
+        label.textContent = day;
+        label.style.marginTop = '8px';
+        label.style.fontSize = '0.8rem';
+        label.style.color = 'inherit'; // Use the current text color in either mode
+        
+        barWrapper.appendChild(bar);
+        barWrapper.appendChild(label);
+        flexContainer.appendChild(barWrapper);
+        
+        // Animate bar height with delay
+        setTimeout(() => {
+            bar.style.height = `${adherenceData[index] * 1.5}px`;
+        }, 100 * index);
+    });
+    
+    chartContainer.appendChild(flexContainer);
+}
+
+// Add reminder alert functionality
+function showMedicationReminder(medication) {
+    const reminderAlert = document.getElementById('reminder-alert');
+    const medicationName = document.getElementById('reminder-med-name');
+    const medicationDosage = document.getElementById('reminder-med-dosage');
+    const medicationNotes = document.getElementById('reminder-med-notes');
+    
+    medicationName.textContent = medication.name;
+    medicationDosage.textContent = medication.dosage;
+    medicationNotes.textContent = medication.notes || 'No special instructions';
+    
+    reminderAlert.style.display = 'block';
+    overlay.style.display = 'block';
+    
+    // Add event listeners for reminder buttons
+    document.getElementById('take-reminder').onclick = () => {
+        markTaken(medication.id);
+        reminderAlert.style.display = 'none';
+        overlay.style.display = 'none';
+        celebrateCompletion();
+    };
+    
+    document.getElementById('snooze-reminder').onclick = () => {
+        reminderAlert.style.display = 'none';
+        overlay.style.display = 'none';
+        
+        // Show another reminder in 15 minutes
+        setTimeout(() => {
+            showMedicationReminder(medication);
+        }, 15 * 60 * 1000); // 15 minutes
+        
+        showNotification(`Reminder for ${medication.name} snoozed for 15 minutes`);
+    };
+}
+
+// Add celebratory animation when medication is taken
+function celebrateCompletion() {
+    // Create confetti elements
+    for (let i = 0; i < 50; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = `${Math.random() * 100}%`;
+        confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+        confetti.style.animationDuration = `${Math.random() * 3 + 2}s`;
+        confetti.style.animationDelay = `${Math.random() * 0.5}s`;
+        confetti.style.animation = `confetti-fall ${Math.random() * 3 + 2}s forwards`;
+        
+        document.body.appendChild(confetti);
+        
+        // Remove confetti after animation completes
+        setTimeout(() => {
+            document.body.removeChild(confetti);
+        }, 5000);
+    }
+}
+
+// Initialize profile section
+function initializeProfile() {
+    const profileSection = document.getElementById('profile-section');
+    profileSection.style.display = 'flex';
+    
+    // Add to main element before the dashboard
+    document.querySelector('main').insertBefore(profileSection, document.querySelector('.dashboard'));
+    
+    document.getElementById('edit-profile-btn').addEventListener('click', () => {
+        const name = prompt('Enter your name:', document.getElementById('profile-name').textContent);
+        if (name) {
+            document.getElementById('profile-name').textContent = name;
+            
+            // Update initials
+            const initials = name.split(' ')
+                .map(n => n[0])
+                .slice(0, 2)
+                .join('')
+                .toUpperCase();
+            document.getElementById('profile-image').textContent = initials;
+            
+            // Store in localStorage
+            localStorage.setItem('userName', name);
+            showNotification('Profile updated!');
+        }
+    });
+    
+    // Load profile from localStorage if available
+    const savedName = localStorage.getItem('userName');
+    if (savedName) {
+        document.getElementById('profile-name').textContent = savedName;
+        const initials = savedName.split(' ')
+            .map(n => n[0])
+            .slice(0, 2)
+            .join('')
+            .toUpperCase();
+        document.getElementById('profile-image').textContent = initials;
+    }
+    
+    updateProfileStats();
+}
+
+function updateProfileStats() {
+    const stats = `Tracking ${medications.length} medications`;
+    document.getElementById('profile-stats').textContent = stats;
+}
+
+// Implement dark mode toggle
+function initializeDarkMode() {
+    const darkModeToggle = document.getElementById('dark-mode-toggle');
+    
+    // Check for saved preference
+    if (localStorage.getItem('darkMode') === 'true') {
+        document.body.classList.add('dark-mode');
+        darkModeToggle.textContent = '☀️';
+    }
+    
+    darkModeToggle.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        
+        if (document.body.classList.contains('dark-mode')) {
+            darkModeToggle.textContent = '☀️';
+            localStorage.setItem('darkMode', 'true');
+        } else {
+            darkModeToggle.textContent = '🌙';
+            localStorage.setItem('darkMode', 'false');
+        }
+    });
+}
+
+// Enhanced reminder check
+function enhancedReminderCheck() {
+    medications.forEach(med => {
+        const oldStatus = med.status;
+        const newStatus = getStatusFromTime(med.time);
+        
+        // If status changed to active and not completed, show interactive reminder
+        if (newStatus === 'active' && oldStatus === 'upcoming' && !med.completed) {
+            showMedicationReminder(med);
+        }
+        
+        // Update status
+        if (oldStatus !== newStatus && !med.completed) {
+            med.status = newStatus;
+            
+            if (newStatus === 'missed' && oldStatus === 'active') {
+                activities.push({
+                    id: activities.length + 1,
+                    medicationId: med.id,
+                    action: 'missed',
+                    timestamp: new Date().toISOString()
+                });
+                
+                // Notify caregivers - in a real app, this would send an email or SMS
+                if (caregivers.length > 0) {
+                    showNotification(`Alert sent to ${caregivers[0].name} about missed medication`);
+                }
+            }
+        }
+    });
+    
+    renderMedications();
+    renderActivities();
+    updateAdherence();
+    saveData();
+}
+
+// Enhanced delete medication with undo functionality
+function deleteMedicationWithUndo(id) {
+    if (confirm('Are you sure you want to delete this medication?')) {
+        const medicationToDelete = medications.find(med => med.id === id);
+        const deletedMedications = JSON.parse(localStorage.getItem('deletedMedications') || '[]');
+        
+        // Store deleted medication for potential undo
+        deletedMedications.push(medicationToDelete);
+        localStorage.setItem('deletedMedications', JSON.stringify(deletedMedications));
+        
+        // Remove from medications array
+        medications = medications.filter(med => med.id !== id);
+        renderMedications();
+        saveData();
+        updateProfileStats();
+        
+        // Show notification with undo option
+        const notificationEl = document.getElementById('notification');
+        notificationEl.innerHTML = `
+            Medication deleted. 
+            <button id="undo-delete" style="background: white; color: var(--primary); border: none; padding: 2px 5px; margin-left: 10px; cursor: pointer;">Undo</button>
+        `;
+        notificationEl.classList.add('show');
+        
+        // Add undo button functionality
+        document.getElementById('undo-delete').addEventListener('click', () => {
+            const deletedMedications = JSON.parse(localStorage.getItem('deletedMedications') || '[]');
+            const lastDeleted = deletedMedications.pop();
+            
+            if (lastDeleted) {
+                medications.push(lastDeleted);
+                localStorage.setItem('deletedMedications', JSON.stringify(deletedMedications));
+                renderMedications();
+                saveData();
+                updateProfileStats();
+                notificationEl.classList.remove('show');
+            }
+        });
+        
+        setTimeout(() => {
+            notificationEl.classList.remove('show');
+        }, 5000);
+    }
+}
+
+// Override the original delete medication function
+window.deleteMedication = deleteMedicationWithUndo;
+
+// Initialize additional features
+document.addEventListener('DOMContentLoaded', () => {
+    // Call original init
+    init();
+    resetMedicationStatuses();
+    
+    // Add new functionality
+    renderCalendar();
+    addStatisticsChart();
+    initializeProfile();
+    initializeDarkMode();
+    
+    // Replace reminder check with enhanced version
+    clearInterval(window.reminderCheckInterval);
+    window.reminderCheckInterval = setInterval(enhancedReminderCheck, 60 * 1000);
+    enhancedReminderCheck(); // Run once immediately
+    
+    // Update original notification function to make it more interactive
+    window.originalShowNotification = window.showNotification;
+    window.showNotification = function(message) {
+        const notification = document.getElementById('notification');
+        notification.textContent = message;
+        notification.classList.add('show');
+        
+        // Add subtle animation to notification
+        notification.style.animation = 'none';
+        setTimeout(() => {
+            notification.style.animation = 'slideIn 0.3s forwards';
+        }, 10);
+        
+        setTimeout(() => {
+            notification.classList.remove('show');
+        }, 3000);
+    };
+});
+    </script>
+    <!-- Add a Reminder Alert -->
+<div class="reminder-alert" id="reminder-alert">
+    <h3>Medication Reminder</h3>
+    <div class="med-row">
+        <div class="med-image">💊</div>
+        <div>
+            <div id="reminder-med-name" style="font-weight: bold;"></div>
+            <div id="reminder-med-dosage" style="font-size: 0.9rem;"></div>
+        </div>
+    </div>
+    <p id="reminder-med-notes" style="margin-top: 0.5rem; font-style: italic;"></p>
+    <div class="reminder-buttons">
+        <button id="snooze-reminder" class="btn-warning">Snooze 15m</button>
+        <button id="take-reminder" class="btn-success">Take Now</button>
+    </div>
+</div>
+
+<!-- Add a Profile Section after the header -->
+<div class="profile-section" id="profile-section" style="display: none;">
+    <div class="profile-image" id="profile-image">JD</div>
+    <div class="profile-info">
+        <h3 id="profile-name">John Doe</h3>
+        <p id="profile-stats">Tracking 3 medications</p>
+    </div>
+    <button id="edit-profile-btn" style="margin-left: auto;" class="btn-small">Edit</button>
+</div>
+
+<!-- Add Dark Mode Toggle in the header -->
+<button class="dark-mode-toggle" id="dark-mode-toggle">🌙</button>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
